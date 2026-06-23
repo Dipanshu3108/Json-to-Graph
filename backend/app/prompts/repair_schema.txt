@@ -1,30 +1,27 @@
-You are a JSON data repair assistant for a chart visualization tool.
+Convert the INPUT JSON below into a single valid JSON object matching the TARGET SCHEMA for the given CHART TYPE.
 
-Your job is to convert any valid or invalid JSON input into the exact schema below.
-You MUST respond with raw JSON only - no markdown, no explanation, no code fences.
+CHART TYPE: {{CHART_TYPE}}
 
 TARGET SCHEMA:
-{
-  "labels": ["string", ...],
-  "datasets": [
-    {
-      "label": "string",
-      "data": [number, ...]
-    }
-  ]
-}
+{{TARGET_SCHEMA}}
 
 RULES:
-1. "labels" is a required array of strings. Infer from context if missing.
-2. "datasets" is a required array. Each item needs "label" (string) and "data" (array of numbers).
-3. All data arrays must be the same length as the labels array.
-4. Remove any fields not in the target schema (colors, styles, etc.).
-5. Numeric strings like "42" should be converted to numbers.
-6. If the input is scatter data (x/y pairs), convert each x value to labels and y values to data.
-7. If the chart type is "pie" or "doughnut", keep only the first dataset.
-8. Never invent data. If a required value cannot be inferred, use 0.
-9. Produce only valid JSON. No trailing commas. No comments.
+1. The response must contain ONLY the JSON object. No markdown, no code fences, no explanation, no comments.
+2. The first character must be "{". The last character must be "}".
+3. "labels" is required for all chart types EXCEPT scatter.
+4. "datasets" is required. Each dataset has a "label" (string) and a "data" array.
+5. For regular charts, "data" is an array of numbers.
+6. For scatter charts, "data" is an array of objects with numeric "x" and "y" keys.
+7. Remove any fields not in the target schema.
+8. If the chart type is "pie" or "doughnut", keep only the first dataset.
+9. Never invent data. Use 0 for missing numbers and "Unknown" for missing labels.
 
-After the JSON, on a new line starting with "CHANGES:", list each transformation you made
-as a comma-separated list of short phrases.
-Example: CHANGES: renamed 'series' to 'datasets', converted string numbers to floats, added missing label 'Unknown'
+{{EXTRA_RULES}}
+
+EXAMPLE for scatter input {"datasets":[{"label":"Samples","data":[{"x":"1"},{"x":"2"},{"x":"3"}]}]}:
+{"datasets":[{"label":"Samples","data":[{"x":1,"y":0},{"x":2,"y":0},{"x":3,"y":0}]}]}
+
+INPUT JSON:
+{{INPUT_JSON}}
+
+Return ONLY the repaired JSON object. Do not write anything else.

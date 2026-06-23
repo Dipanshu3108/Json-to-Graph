@@ -1,6 +1,10 @@
+import logging
+
 from pydantic import ValidationError
 
 from ..schemas.chart import ChartInput, ScatterInput
+
+logger = logging.getLogger(__name__)
 
 CHART_TYPES_REQUIRING_LABELS = {"bar", "line", "pie", "doughnut", "area"}
 SCATTER_TYPES = {"scatter"}
@@ -16,6 +20,7 @@ def validate(chart_type: str, raw_data: dict) -> dict:
             "normalizedData": dict | None
         }
     """
+    logger.info("validator.start chart_type=%s top_keys=%s", chart_type, sorted(raw_data.keys()))
     errors: list[dict] = []
 
     try:
@@ -31,14 +36,22 @@ def validate(chart_type: str, raw_data: dict) -> dict:
                         "suggestion": "Keep only the first dataset, or switch to a 'bar' chart.",
                     }
                 )
+                logger.warning("validator.failed chart_type=%s reason=too_many_datasets", chart_type)
                 return {"valid": False, "errors": errors, "normalizedData": None}
 
+            logger.info("validator.success chart_type=%s datasets=%d", chart_type, len(model.datasets))
             return {"valid": True, "errors": [], "normalizedData": model.model_dump()}
 
         if chart_type in SCATTER_TYPES:
             model = ScatterInput.model_validate(raw_data)
+            logger.info(
+                "validator.success chart_type=%s datasets=%d",
+                chart_type,
+                len(model.datasets),
+            )
             return {"valid": True, "errors": [], "normalizedData": model.model_dump()}
 
+        logger.warning("validator.failed chart_type=%s reason=unknown_chart_type", chart_type)
         return {
             "valid": False,
             "errors": [{"field": "chartType", "message": f"Unknown chart type: '{chart_type}'"}],
@@ -54,6 +67,12 @@ def validate(chart_type: str, raw_data: dict) -> dict:
                     "suggestion": _suggest(err),
                 }
             )
+        logger.warning(
+            "validator.failed chart_type=%s error_count=%d errors=%s",
+            chart_type,
+            len(errors),
+            errors,
+        )
         return {"valid": False, "errors": errors, "normalizedData": None}
 
 

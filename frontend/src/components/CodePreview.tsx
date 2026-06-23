@@ -22,15 +22,19 @@ export function CodePreview(): JSX.Element {
   const handleGenerate = async () => {
     if (!generationData) return;
     const chartTypeToUse = customChartDesc.trim() || chartType;
+    console.info("[CodePreview] handleGenerate chartType=%s", chartTypeToUse);
     setIsGeneratingCode(true);
     try {
       const res = await generateCode(chartTypeToUse, generationData, theme);
       if (res.error && !res.code) {
+        console.warn("[CodePreview] generateCode returned error", res.error);
         setGeneratedCode(`<!doctype html><html><body><pre>${res.error}</pre></body></html>`);
       } else {
+        console.info("[CodePreview] generateCode success codeLen=%d", res.code.length);
         setGeneratedCode(res.code);
       }
     } catch (error) {
+      console.error("[CodePreview] generateCode threw", error);
       setGeneratedCode(`<!doctype html><html><body><pre>${String(error)}</pre></body></html>`);
     } finally {
       setIsGeneratingCode(false);

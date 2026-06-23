@@ -11,6 +11,7 @@ import type {
 const BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 async function post<T>(path: string, body: unknown): Promise<T> {
+  console.info(`[api] POST ${path} start`, body);
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -26,10 +27,13 @@ async function post<T>(path: string, body: unknown): Promise<T> {
           message: res.statusText,
         }) as ApiError
     );
+    console.error(`[api] POST ${path} error`, err);
     throw err;
   }
 
-  return res.json() as Promise<T>;
+  const data = (await res.json()) as T;
+  console.info(`[api] POST ${path} success`, data);
+  return data;
 }
 
 export const validateChart = (chartType: ChartType, data: JsonObject): Promise<ValidateResponse> =>

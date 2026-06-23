@@ -14,10 +14,15 @@ export function useValidate(): void {
   useEffect(() => {
     window.clearTimeout(timer.current);
 
-    if (!rawJson.trim() || parseError) return;
+    if (!rawJson.trim()) return;
 
-    timer.current = window.setTimeout(() => {
-      void runValidation();
+    timer.current = window.setTimeout(async () => {
+      if (parseError) {
+        console.info("[useValidate] parse error detected; skipping auto-repair (manual only)");
+        return;
+      }
+
+      await runValidation();
     }, DEBOUNCE_MS);
 
     return () => window.clearTimeout(timer.current);

@@ -232,6 +232,39 @@ button.ghost {
   color: var(--danger);
 }
 
+.schema-examples {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.schema-examples-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--muted);
+  background: #fafcff;
+  border-bottom: 1px solid var(--border);
+}
+
+.schema-examples-header strong {
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+.schema-examples-code {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  background: #f8fafc;
+  color: var(--text);
+  overflow-x: auto;
+}
+
 @media (max-width: 980px) {
   .app {
     grid-template-columns: 1fr;

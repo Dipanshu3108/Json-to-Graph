@@ -35,6 +35,7 @@ export function ChartPreview(): JSX.Element {
   useEffect(() => {
     if (!rootRef.current || !option) return;
 
+    console.info("[ChartPreview] rendering chartType=%s", chartType);
     const chart = echarts.init(rootRef.current);
     chart.setOption(option);
 

@@ -1,4 +1,5 @@
 import { useStudioStore } from "../store/useStudioStore";
+import { SchemaExamples } from "./SchemaExamples";
 
 const STATUS_CONFIG = {
   idle: { text: "Paste JSON to get started", tone: "muted" },
@@ -63,6 +64,8 @@ export function StatusBar(): JSX.Element {
           </ul>
         </details>
       )}
+
+      <SchemaExamples />
     </section>
   );
 }

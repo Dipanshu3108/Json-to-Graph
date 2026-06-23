@@ -8,8 +8,8 @@ interface StudioActions {
   setChartType: (type: ChartType) => void;
   setTheme: (theme: Theme) => void;
   setRenderMode: (mode: RenderMode) => void;
-  runValidation: () => Promise<void>;
-  runRepair: () => Promise<void>;
+  runValidation: () => Promise<boolean>;
+  runRepair: () => Promise<boolean>;
   setGeneratedCode: (code: string | null) => void;
   setIsGeneratingCode: (v: boolean) => void;
 }
@@ -44,6 +44,8 @@ export const useStudioStore = create<StudioStore>((set, get) => ({
       parseError = (error as Error).message;
     }
 
+    console.info("[store] setRawJson parseError=%s", parseError);
+
     set({
       rawJson: json,
       parsedInput,
@@ -58,22 +60,31 @@ export const useStudioStore = create<StudioStore>((set, get) => ({
   },
 
   setChartType(chartType) {
+    console.info("[store] setChartType chartType=%s", chartType);
     set({ chartType, validationStatus: "idle", activeData: null, generatedCode: null });
   },
 
   setTheme(theme) {
+    console.info("[store] setTheme theme=%s", theme);
     set({ theme });
   },
 
   setRenderMode(renderMode) {
+    console.info("[store] setRenderMode mode=%s", renderMode);
     set({ renderMode });
   },
 
   async runValidation() {
     const { parsedInput, parseError, chartType } = get();
-    if (parseError || !parsedInput) return;
+    console.info("[store] runValidation start chartType=%s", chartType);
+
+    if (parseError || !parsedInput) {
+      console.info("[store] runValidation skipped reason=parse_error_or_empty");
+      return false;
+    }
 
     if (typeof parsedInput !== "object" || parsedInput === null || Array.isArray(parsedInput)) {
+      console.info("[store] runValidation failed reason=root_not_object");
       set({
         validationStatus: "invalid",
         validationErrors: [
@@ -85,7 +96,7 @@ export const useStudioStore = create<StudioStore>((set, get) => ({
         ],
         activeData: null,
       });
-      return;
+      return false;
     }
 
     const validationInput = parsedInput as Record<string, unknown>;
@@ -96,32 +107,43 @@ export const useStudioStore = create<StudioStore>((set, get) => ({
       const result = await validateChart(chartType, validationInput);
 
       if (result.valid) {
+        console.info("[store] runValidation success");
         set({
           validationStatus: "valid",
           validationErrors: [],
           activeData: result.normalizedData ?? null,
         });
-      } else {
-        set({
-          validationStatus: "invalid",
-          validationErrors: result.errors,
-          activeData: null,
-        });
+        return true;
       }
+
+      console.info("[store] runValidation invalid errors=%d", result.errors.length);
+      set({
+        validationStatus: "invalid",
+        validationErrors: result.errors,
+        activeData: null,
+      });
+      return false;
     } catch (error) {
       const message = (error as { message?: string }).message ?? "Validation failed.";
+      console.error("[store] runValidation error", error);
       set({
         validationStatus: "invalid",
         validationErrors: [{ field: "root", message }],
         activeData: null,
       });
+      return false;
     }
   },
 
   async runRepair() {
     const { parsedInput, rawJson, chartType } = get();
     const repairInput = parsedInput ?? rawJson.trim();
-    if (!repairInput) return;
+    console.info("[store] runRepair start chartType=%s", chartType);
+
+    if (!repairInput) {
+      console.info("[store] runRepair skipped reason=no_input");
+      return false;
+    }
 
     set({ validationStatus: "repairing" });
 
@@ -130,6 +152,7 @@ export const useStudioStore = create<StudioStore>((set, get) => ({
 
       if (result.fixed && result.normalizedData) {
         const repairedJson = JSON.stringify(result.normalizedData, null, 2);
+        console.info("[store] runRepair success changes=%d", result.changes.length);
         set({
           rawJson: repairedJson,
           parsedInput: result.normalizedData,
@@ -140,26 +163,33 @@ export const useStudioStore = create<StudioStore>((set, get) => ({
           activeData: result.normalizedData,
           validationErrors: [],
         });
-      } else {
-        set({
-          validationStatus: "repair-failed",
-          validationErrors: [{ field: "root", message: result.error ?? "Repair failed." }],
-        });
+        return true;
       }
+
+      console.warn("[store] runRepair failed error=%s", result.error);
+      set({
+        validationStatus: "repair-failed",
+        validationErrors: [{ field: "root", message: result.error ?? "Repair failed." }],
+      });
+      return false;
     } catch (error) {
       const message = (error as { message?: string }).message ?? "Repair failed.";
+      console.error("[store] runRepair error", error);
       set({
         validationStatus: "repair-failed",
         validationErrors: [{ field: "root", message }],
       });
+      return false;
     }
   },
 
   setGeneratedCode(code) {
+    console.info("[store] setGeneratedCode hasCode=%s", Boolean(code));
     set({ generatedCode: code });
   },
 
   setIsGeneratingCode(v) {
+    console.info("[store] setIsGeneratingCode isGenerating=%s", v);
     set({ isGeneratingCode: v });
   },
 }));

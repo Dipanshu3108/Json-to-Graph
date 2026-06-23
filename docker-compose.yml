@@ -1,9 +1,29 @@
 services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama/entrypoint.sh:/entrypoint.sh
+      - ollama:/root/.ollama
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    environment:
+      - OLLAMA_MODEL_PULL=deepseek-coder:latest
+
   backend:
     build: ./backend
     ports:
       - "8000:8000"
     env_file: .env
+    environment:
+      - LLM_PROVIDER=ollama
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - LLM_MODEL_OLLAMA=deepseek-coder:latest
+      - LLM_TIMEOUT_SECONDS=300
+      - CORS_ORIGINS=http://localhost:5173
+    depends_on:
+      ollama:
+        condition: service_started
 
   frontend:
     build: ./frontend
@@ -13,3 +33,6 @@ services:
       - VITE_API_BASE_URL=http://localhost:8000
     depends_on:
       - backend
+
+volumes:
+  ollama:

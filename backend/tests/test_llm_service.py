@@ -12,5 +12,5 @@ def test_timeout_is_numeric() -> None:
 
 
 def test_provider_default_or_env() -> None:
-    provider = os.getenv("LLM_PROVIDER", "anthropic")
+    provider = os.getenv("LLM_PROVIDER", "gemini")
     assert llm_service.PROVIDER == provider
