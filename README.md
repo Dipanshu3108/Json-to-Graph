@@ -85,7 +85,7 @@ Exposes:
 Key environment variables:
 | Variable | Purpose |
 |----------|---------|
-| `MOONSHOT_API_KEY` | Kimi API key |
+| `KIMI_API_KEY` | Kimi API key |
 | `LLM_MODEL_KIMI` | Model name (default: `kimi-k2.6`) |
 | `KIMI_BASE_URL` | API endpoint (default: `https://api.moonshot.ai/v1`) |
 | `CORS_ORIGINS` | Allowed frontend origins |
