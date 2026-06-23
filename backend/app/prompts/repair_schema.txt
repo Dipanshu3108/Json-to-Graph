@@ -14,14 +14,22 @@ RULES:
 6. For scatter charts, "data" is an array of objects with numeric "x" and "y" keys.
 7. Remove any fields not in the target schema.
 8. If the chart type is "pie" or "doughnut", keep only the first dataset.
-9. Never invent data. Use 0 for missing numbers and "Unknown" for missing labels.
+9. Generate any missing required data points using sensible defaults (0 for numbers, "Unknown" for labels) when the input does not provide a value. Do NOT leave required fields empty.
+10. Preserve all input data that already matches the schema; only transform or fill in what is necessary.
 
 {{EXTRA_RULES}}
 
-EXAMPLE for scatter input {"datasets":[{"label":"Samples","data":[{"x":"1"},{"x":"2"},{"x":"3"}]}]}:
-{"datasets":[{"label":"Samples","data":[{"x":1,"y":0},{"x":2,"y":0},{"x":3,"y":0}]}]}
+EXAMPLE for scatter input {"datasets":[{"label":"Samples","data":[{"x":"1"},{"x":"3"}]}]}:
+{"datasets":[{"label":"Samples","data":[{"x":1,"y":0},{"x":3,"y":0}]}]}
+
+After the JSON object, on a new line starting with "GENERATED:", list every data point you had to invent so the UI can show it to the user. Use one bullet per line. Example:
+GENERATED:
+- dataset 'Samples' point 0: y was generated as 0
+- dataset 'Samples' point 1: y was generated as 0
+
+After the GENERATED section, you may add one new line starting with "CHANGES:" listing short comma-separated changes. The CHANGES line is optional.
 
 INPUT JSON:
 {{INPUT_JSON}}
 
-Return ONLY the repaired JSON object. Do not write anything else.
+Return ONLY the repaired JSON object followed by the optional GENERATED and CHANGES sections. Do not write anything else.

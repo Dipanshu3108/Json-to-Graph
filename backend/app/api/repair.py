@@ -87,16 +87,22 @@ async def repair_chart(request: RepairRequest) -> RepairResponse:
         logger.exception("repair.llm_unexpected_error chart_type=%s", request.chartType)
         return RepairResponse(fixed=False, error=f"LLM unavailable: {exc}")
 
-    # The model should return JSON first, optionally followed by a CHANGES: line.
-    # If it does not, fall back to searching the entire response for a JSON object.
-    json_text = raw_response
+    # Parse optional trailing sections. JSON should come first, then GENERATED:, then CHANGES:.
     changes_text = ""
-    if "CHANGES:" in raw_response:
-        parts = raw_response.split("CHANGES:", 1)
-        json_text = parts[0].strip()
+    generated_text = ""
+    remaining_text = raw_response
+
+    if "CHANGES:" in remaining_text:
+        parts = remaining_text.split("CHANGES:", 1)
+        remaining_text = parts[0]
         changes_text = parts[1].strip()
 
-    extracted = _extract_json(json_text)
+    if "GENERATED:" in remaining_text:
+        parts = remaining_text.split("GENERATED:", 1)
+        remaining_text = parts[0]
+        generated_text = parts[1].strip()
+
+    extracted = _extract_json(remaining_text)
     if extracted is None:
         extracted = _extract_json(raw_response)
 
@@ -118,6 +124,13 @@ async def repair_chart(request: RepairRequest) -> RepairResponse:
             raw_response[:500],
         )
         return RepairResponse(fixed=False, error="LLM returned unparseable JSON.", changes=[])
+
+    generated_data_points: list[str] = []
+    if generated_text:
+        for line in generated_text.splitlines():
+            line = line.strip().lstrip("-").strip()
+            if line:
+                generated_data_points.append(line)
 
     changes: list[str] = []
     if changes_text:
@@ -142,4 +155,5 @@ async def repair_chart(request: RepairRequest) -> RepairResponse:
         fixed=True,
         normalizedData=result["normalizedData"],
         changes=changes,
+        generatedDataPoints=generated_data_points,
     )

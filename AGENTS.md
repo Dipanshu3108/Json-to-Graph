@@ -23,8 +23,7 @@ The project supports six chart types: `bar`, `line`, `area`, `pie`, `doughnut`, 
 ├── docker-compose.yml
 ├── README.md
 ├── requirements.txt            # (legacy) streamlit/genai/pydantic
-├── ollama/
-│   └── entrypoint.sh           # starts Ollama and pulls the repair model
+├── ollama/                     # (legacy) Ollama setup; no longer used by default
 ├── backend/
 │   ├── Dockerfile
 │   ├── requirements.txt        # fastapi, uvicorn, pydantic, httpx, pytest
@@ -98,8 +97,8 @@ The project supports six chart types: `bar`, `line`, `area`, `pie`, `doughnut`, 
 - **Framework**: FastAPI 0.115.2
 - **Server**: Uvicorn 0.30.6
 - **Validation**: Pydantic 2.9.2
-- **HTTP client**: httpx 0.27.2 (used for all LLM provider calls)
-- **LLM providers**: Anthropic, OpenAI, Google Gemini, Ollama
+- **HTTP client**: httpx 0.27.2
+- **LLM provider**: Kimi (Moonshot AI)
 - **Testing**: pytest 8.3.3
 
 ### Frontend
@@ -121,17 +120,16 @@ The project supports six chart types: `bar`, `line`, `area`, `pie`, `doughnut`, 
 
 ## Configuration
 
-Copy `.env.example` to `.env` and fill in at least the API key for the provider you want to use.
+Copy `.env.example` to `.env` and fill in your Kimi API key.
 
 Key variables:
 
 | Variable | Purpose |
 | --- | --- |
-| `LLM_PROVIDER` | One of `anthropic`, `openai`, `gemini`, `ollama` (code default: `gemini`; `.env.example` uses `ollama`). |
-| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY` | Provider API keys. |
-| `OLLAMA_BASE_URL` | Base URL for local Ollama (default: `http://localhost:11434`). |
-| `LLM_MODEL_*` | Model name per provider. The Ollama default is `deepseek-coder:latest`. |
-| `LLM_TIMEOUT_SECONDS` | Request timeout (default: `60`). |
+| `MOONSHOT_API_KEY` | Kimi (Moonshot AI) API key. |
+| `LLM_MODEL_KIMI` | Kimi model name (default: `kimi-k2.6`). |
+| `KIMI_BASE_URL` | Kimi API base URL (default: `https://api.moonshot.ai/v1`). |
+| `LLM_TIMEOUT_SECONDS` | Request timeout (default: `120`). |
 | `CORS_ORIGINS` | Comma-separated allowed frontend origins. |
 | `VITE_API_BASE_URL` | Frontend build-time variable pointing to the backend. |
 
@@ -171,11 +169,10 @@ docker compose up --build
 
 This builds and starts three services:
 
-- `ollama` — runs the Ollama server and pulls `deepseek-coder:latest` on first start (see `ollama/entrypoint.sh`).
-- `backend` — configured to call Ollama at `http://ollama:11434` with `LLM_MODEL_OLLAMA=deepseek-coder:latest`.
+- `backend` — configured to call Kimi using the credentials in `.env`.
 - `frontend` — runs Vite dev mode, forcing `--host 0.0.0.0` and overriding `VITE_API_BASE_URL` to `http://localhost:8000`.
 
-Exposed ports: `8000` (backend), `5173` (frontend), `11434` (Ollama). The first startup may take a while while the model downloads.
+Exposed ports: `8000` (backend), `5173` (frontend).
 
 ### Production Build (Frontend)
 
@@ -333,10 +330,9 @@ This runs Vitest. There are currently no test files under `src/`.
 
 ## Deployment Notes
 
-- `docker-compose.yml` builds the backend, frontend and an `ollama` service; it maps ports `8000`, `5173` and `11434`.
+- `docker-compose.yml` builds the backend and frontend services; it maps ports `8000` and `5173`.
 - Backend container uses `python:3.12-slim` and runs `uvicorn app.main:app --host 0.0.0.0 --port 8000`.
 - Frontend container uses `node:20-alpine` and runs Vite dev mode with `--host 0.0.0.0`.
-- Ollama container uses `ollama/ollama:latest` and keeps models in a named Docker volume (`ollama`).
 - The production frontend build is not served by the current Docker setup; it runs the Vite dev server.
 - Secrets live only in `.env`, which is excluded by `.gitignore`.
 
@@ -365,12 +361,9 @@ This runs Vitest. There are currently no test files under `src/`.
 6. Add backend and frontend tests if applicable.
 7. Update `README.md` and this file.
 
-### Add a New LLM Provider
+### Change the LLM Provider
 
-1. Add the provider name and environment variable handling in `backend/app/services/llm_service.py`.
-2. Implement an async `_call_<provider>` function.
-3. Wire it into the `complete()` dispatcher.
-4. Add the provider to `MODELS` and update tests if the set of providers changes.
+The codebase is intentionally single-provider (Kimi). To switch providers, replace the implementation in `backend/app/services/llm_service.py` and update the environment variables in `.env.example` and `docker-compose.yml`.
 
 ### Change the Prompts
 

@@ -62,6 +62,7 @@ export interface RepairResponse {
   fixed: boolean;
   normalizedData?: AnyChartInput;
   changes: string[];
+  generatedDataPoints: string[];
   error?: string;
 }
 
@@ -89,6 +90,7 @@ export interface StudioState {
   validationErrors: ValidationError[];
   repairedData: AnyChartInput | null;
   repairChanges: string[];
+  generatedDataPoints: string[];
 
   activeData: AnyChartInput | null;
 

@@ -15,6 +15,7 @@ export function StatusBar(): JSX.Element {
   const validationStatus = useStudioStore((s) => s.validationStatus);
   const validationErrors = useStudioStore((s) => s.validationErrors);
   const repairChanges = useStudioStore((s) => s.repairChanges);
+  const generatedDataPoints = useStudioStore((s) => s.generatedDataPoints);
   const parseError = useStudioStore((s) => s.parseError);
   const isGeneratingCode = useStudioStore((s) => s.isGeneratingCode);
   const runRepair = useStudioStore((s) => s.runRepair);
@@ -63,6 +64,17 @@ export function StatusBar(): JSX.Element {
             ))}
           </ul>
         </details>
+      )}
+
+      {generatedDataPoints.length > 0 && (
+        <div className="generated-notice warn">
+          <strong>Following data points are generated to cater to schema:</strong>
+          <ul className="issues generated">
+            {generatedDataPoints.map((point, idx) => (
+              <li key={`generated-${idx}`}>{point}</li>
+            ))}
+          </ul>
+        </div>
       )}
 
       <SchemaExamples />

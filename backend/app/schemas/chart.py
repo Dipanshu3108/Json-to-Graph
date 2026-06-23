@@ -68,6 +68,7 @@ class RepairResponse(BaseModel):
     fixed: bool
     normalizedData: Optional[dict] = None
     changes: list[str] = []
+    generatedDataPoints: list[str] = []
     error: Optional[str] = None
 
 

@@ -27,6 +27,7 @@ const INITIAL: StudioState = {
   validationErrors: [],
   repairedData: null,
   repairChanges: [],
+  generatedDataPoints: [],
   activeData: null,
   generatedCode: null,
   isGeneratingCode: false,
@@ -55,13 +56,14 @@ export const useStudioStore = create<StudioStore>((set, get) => ({
       activeData: null,
       repairedData: null,
       repairChanges: [],
+      generatedDataPoints: [],
       generatedCode: null,
     });
   },
 
   setChartType(chartType) {
     console.info("[store] setChartType chartType=%s", chartType);
-    set({ chartType, validationStatus: "idle", activeData: null, generatedCode: null });
+    set({ chartType, validationStatus: "idle", activeData: null, generatedDataPoints: [], generatedCode: null });
   },
 
   setTheme(theme) {
@@ -152,7 +154,7 @@ export const useStudioStore = create<StudioStore>((set, get) => ({
 
       if (result.fixed && result.normalizedData) {
         const repairedJson = JSON.stringify(result.normalizedData, null, 2);
-        console.info("[store] runRepair success changes=%d", result.changes.length);
+        console.info("[store] runRepair success changes=%d generated=%d", result.changes.length, result.generatedDataPoints.length);
         set({
           rawJson: repairedJson,
           parsedInput: result.normalizedData,
@@ -160,6 +162,7 @@ export const useStudioStore = create<StudioStore>((set, get) => ({
           validationStatus: "repaired",
           repairedData: result.normalizedData,
           repairChanges: result.changes,
+          generatedDataPoints: result.generatedDataPoints,
           activeData: result.normalizedData,
           validationErrors: [],
         });

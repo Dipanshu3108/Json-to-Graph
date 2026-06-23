@@ -169,6 +169,26 @@ button.ghost {
   color: var(--ok);
 }
 
+.generated-notice {
+  margin-top: 8px;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fffaeb;
+  color: var(--warn);
+  font-size: 13px;
+}
+
+.generated-notice strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.generated-notice .issues.generated {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--warn);
+}
+
 .issue-dropdown {
   margin-top: 8px;
   border: 1px solid var(--border);
